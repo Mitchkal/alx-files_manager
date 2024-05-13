@@ -26,16 +26,25 @@ class AuthController {
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const { id } = user;
-    console.log(`user id is ${id}`);
+
     const token = uuidv4();
-    await redisClient.set(`auth_${token}`, user.id.toString(), 86400);
+    await redisClient.set(`auth_${token}`, user._id.toString(), 24 * 60 * 60);
+
     return res.status(200).json({ token });
   }
 
-  // static async getDisconnect(req, res) {
-
-  // }
+  static async getDisconnect(req, res) {
+    const token = req.headers['x-token'];
+    if (!token) {
+      res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = await redisClient.get(`auth_${token}`);
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    await redisClient.del(`auth_${token}`);
+    return res.status(204).send();
+  }
 }
 
 module.exports = AuthController;
