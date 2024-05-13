@@ -6,7 +6,7 @@ import redisClient from '../utils/redis';
 const sha1 = require('sha1');
 
 class AuthController {
-  static async connect(req, res) {
+  static async getConnect(req, res) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Basic ')) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -19,17 +19,23 @@ class AuthController {
     const password = auth[1];
     const hashedPassword = sha1(password);
 
-    const user = await dbClient.client.db
-      .collections('users')
+    const user = await dbClient.db
+      .collection('users')
       .findOne({ email, password: hashedPassword });
 
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    const { id } = user;
+    console.log(`user id is ${id}`);
     const token = uuidv4();
     await redisClient.set(`auth_${token}`, user.id.toString(), 86400);
     return res.status(200).json({ token });
   }
+
+  // static async getDisconnect(req, res) {
+
+  // }
 }
 
 module.exports = AuthController;
