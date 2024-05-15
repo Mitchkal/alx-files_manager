@@ -209,6 +209,7 @@ class FilesController {
   static async getFile(req, res) {
     const token = req.headers['x-token'];
     const fileId = req.params.id;
+    const { size } = req.query;
 
     let file;
     try {
@@ -231,19 +232,31 @@ class FilesController {
     if (file.type === 'folder') {
       return res.status(400).json({ error: "A folder doesn't have content" });
     }
+
+    if (size) {
+      const validSizes = ['500', '250', '100'];
+      if (!validSizes.includes(size)) {
+        return res.status(400).json({ error: 'Invalid size parameter' });
+      }
+    }
+    // check if file exists locally
     if (!fs.existsSync(file.localPath)) {
       return res.status(404).json({ error: 'Not found' });
     }
+    // set mime type
     const mimeType = mime.lookup(file.name) || 'application/octet-stream';
 
-    fs.readFile(file.localPath, (err, data) => {
-      if (err) {
-        console.error('Error reading file:', err);
-        return res.status(500).json({ error: 'Internal Server Error' });
-      }
-      res.setHeader('Content-Type', mimeType);
-      return res.status(200).send(data);
-    });
+    fs.readFile(
+      size ? `${file.localPath}_${size}` : file.localPath,
+      (err, data) => {
+        if (err) {
+          console.error('Error reading file:', err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+        }
+        res.setHeader('Content-Type', mimeType);
+        return res.status(200).send(data);
+      },
+    );
   }
 }
 module.exports = FilesController;
