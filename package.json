@@ -1,7 +1,7 @@
 {
   "name": "files_manager",
   "version": "1.0.0",
-  "description": "",
+  "description": "# Authors - Inene Israel - [twitter]()",
   "main": "index.js",
   "scripts": {
     "lint": "eslint",
@@ -15,6 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel": "^6.23.0",
     "body-parser": "^1.20.2",
     "bull": "^3.16.0",
     "chai-http": "^4.3.0",
