@@ -1,4 +1,5 @@
 /* eslint-disable object-curly-newline */
+import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 import formatFile from '../utils/format';
@@ -202,6 +203,47 @@ class FilesController {
       console.error('Error updating file:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
+  }
+
+  // eslint-disable-next-line consistent-return
+  static async getFile(req, res) {
+    const token = req.headers['x-token'];
+    const fileId = req.params.id;
+
+    let file;
+    try {
+      file = await dbClient.db
+        .collection('files')
+        .findOne({ _id: new ObjectId(fileId) });
+    } catch (error) {
+      console.error('Error finding file:', error);
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!file) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!file.isPublic) {
+      const userId = await redisClient.get(`auth_${token}`);
+      if (!userId || userId !== file.userId) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+    }
+    if (file.type === 'folder') {
+      return res.status(400).json({ error: "A folder doesn't have content" });
+    }
+    if (!fs.existsSync(file.localPath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    const mimeType = mime.lookup(file.name) || 'application/octet-stream';
+
+    fs.readFile(file.localPath, (err, data) => {
+      if (err) {
+        console.error('Error reading file:', err);
+        return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      res.setHeader('Content-Type', mimeType);
+      return res.status(200).send(data);
+    });
   }
 }
 module.exports = FilesController;
