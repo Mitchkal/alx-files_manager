@@ -1,6 +1,7 @@
 /* eslint-disable object-curly-newline */
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
+import formatFile from '../utils/format';
 
 const { ObjectId } = require('mongodb');
 const { v4: uuidv4 } = require('uuid');
@@ -85,8 +86,6 @@ class FilesController {
       file = await dbClient.db
         .collection('files')
         .findOne({ _id: new ObjectId(fileId), userId });
-
-      console.log(`found file is ${file}`);
     } catch (error) {
       console.log('error:', error);
       return res.status(404).json({ error: 'Not found' });
@@ -94,7 +93,7 @@ class FilesController {
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
-    return res.status(200).json(file);
+    return res.status(200).json(formatFile(file));
   }
 
   static async getIndex(req, res) {
@@ -159,7 +158,7 @@ class FilesController {
         .collection('files')
         .updateOne({ _id: new ObjectId(fileId) }, { $set: { isPublic: true } });
       file.isPublic = true;
-      return res.status(200).json(file);
+      return res.status(200).json(formatFile(file));
     } catch (error) {
       console.error('Error updating file:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
@@ -198,7 +197,7 @@ class FilesController {
           { $set: { isPublic: false } },
         );
       file.isPublic = false;
-      return res.status(200).json(file);
+      return res.status(200).json(formatFile(file));
     } catch (error) {
       console.error('Error updating file:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
