@@ -1,5 +1,5 @@
 const formatFile = (file) => ({
-  id: file._id.toString(),
+  id: file._id,
   userId: file.userId,
   name: file.name,
   type: file.type,

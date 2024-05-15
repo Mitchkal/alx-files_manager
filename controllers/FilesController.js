@@ -40,7 +40,7 @@ class FilesController {
       if (!parent) {
         return res.status(400).json({ error: 'Parent not found' });
       }
-      console.log(`parent: ${parent}`);
+
       if (parent.type !== 'folder') {
         return res.status(400).json({ error: 'Parent is not a folder' });
       }
@@ -65,7 +65,7 @@ class FilesController {
     };
     const result = await dbClient.db.collection('files').insertOne(newFile);
     newFile._id = result.insertedId;
-    return res.status(201).json(newFile);
+    return res.status(201).json(formatFile(newFile));
   }
 
   static async getShow(req, res) {
@@ -75,7 +75,7 @@ class FilesController {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const userId = await redisClient.get(`auth_${token}`);
-    console.log(`the userId is ${userId}`);
+
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -122,8 +122,17 @@ class FilesController {
         .collection('files')
         .aggregate(pipeline)
         .toArray();
+      // console.log(`file is ${file}`);
+      const transformedFile = file.map((f) => ({
+        id: f._id.toString(),
+        userId: f.userId,
+        name: f.name,
+        type: f.type,
+        isPublic: f.isPublic,
+        parentId: f.parentId,
+      }));
 
-      return res.status(200).json(file);
+      return res.status(200).json(transformedFile);
     } catch (error) {
       console.error('Error getting file:', error);
       return res.status(500).json({ error: 'Intenal Server Error' });
@@ -207,15 +216,25 @@ class FilesController {
 
   // eslint-disable-next-line consistent-return
   static async getFile(req, res) {
-    const token = req.headers['x-token'];
+    // const token = req.headers['x-token'];
+    // console.log(`outer token is ${token}`);
     const fileId = req.params.id;
     const { size } = req.query;
 
+    let userId;
+    const token = req.headers['x-token'];
+    if (!token) {
+      userId = false;
+    } else {
+      userId = await redisClient.get(`auth_${token}`);
+    }
+
     let file;
+    // retrieve file from db and if unavailable return not found
     try {
       file = await dbClient.db
         .collection('files')
-        .findOne({ _id: new ObjectId(fileId) });
+        .findOne({ _id: new ObjectId(fileId), userId });
     } catch (error) {
       console.error('Error finding file:', error);
       return res.status(404).json({ error: 'Not found' });
@@ -223,11 +242,23 @@ class FilesController {
     if (!file) {
       return res.status(404).json({ error: 'Not found' });
     }
-    if (!file.isPublic) {
-      const userId = await redisClient.get(`auth_${token}`);
-      if (!userId || userId !== file.userId) {
-        return res.status(404).json({ error: 'Not found' });
-      }
+
+    // console.log(`file is ${file}, userid is: ${file.userId} `);
+    // if file is not public
+    console.log(`file ispublic: ${file.isPublic}`);
+    console.log(`userId is: ${userId}`);
+    console.log(`file userId is: ${file.userId}`);
+    if (
+      (!file.isPublic && !userId) ||
+      (userId && file.userId !== userId && !file.isPublic)
+    ) {
+      // console.log(`token is ${token}`);
+      // check for authentication
+      // console.log(`inner userId is ${userId}`);
+      // if no authentication(userId is null) or not owner of the file
+      // if (!userId || userId !== file.userId) {
+      return res.status(404).json({ error: 'Notiii found' });
+      // }
     }
     if (file.type === 'folder') {
       return res.status(400).json({ error: "A folder doesn't have content" });
