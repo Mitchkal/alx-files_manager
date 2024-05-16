@@ -35,7 +35,7 @@ class UserController {
     try {
       const result = await dbClient.db.collection('users').insertOne(newUser);
       const { _id } = result.ops[0];
-      return res.status(201).json({ id: _id, email });
+      return res.status(201).json({ id: _id.toString(), email });
     } catch (error) {
       console.error('Error creating user:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
