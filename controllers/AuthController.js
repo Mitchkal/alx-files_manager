@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 import { v4 as uuidv4 } from 'uuid';
 
 import dbClient from '../utils/db';
@@ -11,13 +12,22 @@ class AuthController {
     if (!authHeader || !authHeader.startsWith('Basic ')) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    // eslint-disable-next-line new-cap
-    const auth = new Buffer.from(authHeader.split(' ')[1], 'base64')
-      .toString()
-      .split(':');
-    const email = auth[0];
-    const password = auth[1];
-    const hashedPassword = sha1(password);
+
+    let email;
+    let password;
+    let hashedPassword;
+
+    try {
+      // eslint-disable-next-line new-cap
+      const auth = new Buffer.from(authHeader.split(' ')[1], 'base64')
+        .toString()
+        .split(':');
+      email = auth[0];
+      password = auth[1];
+      hashedPassword = sha1(password);
+    } catch (error) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     const user = await dbClient.db
       .collection('users')

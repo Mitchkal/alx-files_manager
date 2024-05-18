@@ -1,7 +1,7 @@
 {
   "name": "files_manager",
   "version": "1.0.0",
-  "description": "# Authors - Inene Israel - [twitter]()",
+  "description": "# Authors - Inene Israel - [twitter](), Mitchell Kalenda",
   "main": "index.js",
   "scripts": {
     "lint": "eslint",
@@ -9,7 +9,9 @@
     "start-server": "nodemon --exec babel-node --presets @babel/preset-env ./server.js",
     "start-worker": "nodemon --exec babel-node --presets @babel/preset-env ./worker.js",
     "dev": "nodemon --exec babel-node --presets @babel/preset-env",
-    "test": "mocha --require @babel/register --exit",
+    "test": "mocha tests/**/*.js --require @babel/register --exit",
+    "test-with-coverage": "nyc --reporter=text ./node_modules/.bin/mocha --opts mocha.opts tests/**/*.js",
+    "coveralls": "nyc ./node_modules/.bin/mocha --opts mocha.opts tests/**/*.js && nyc report --reporter=text-lcov | coveralls",
     "start": "node server.js"
   },
   "author": "",
@@ -25,6 +27,7 @@
     "mongodb": "^3.5.9",
     "redis": "^2.8.0",
     "sha1": "^1.1.1",
+    "supertest": "^7.0.0",
     "uuid": "^8.2.0"
   },
   "devDependencies": {
@@ -33,6 +36,7 @@
     "@babel/node": "^7.8.0",
     "@babel/preset-env": "^7.8.2",
     "@babel/register": "^7.8.0",
+    "@types/supertest": "^6.0.2",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "eslint": "^6.4.0",

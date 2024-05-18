@@ -249,8 +249,8 @@ class FilesController {
     console.log(`userId is: ${userId}`);
     console.log(`file userId is: ${file.userId}`);
     if (
-      (!file.isPublic && !userId)
-      || (userId && file.userId !== userId && !file.isPublic)
+      (!file.isPublic && !userId) ||
+      (userId && file.userId !== userId && !file.isPublic)
     ) {
       // console.log(`token is ${token}`);
       // check for authentication
